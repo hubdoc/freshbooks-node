@@ -12,8 +12,14 @@ function Freshbooks(account, token, agent, showAttributes) {
 
 Freshbooks.prototype.call = function(method, json, callback) {
     var self = this;
+    var xml;
 
-    var xml = easyxml.render(json);
+    if (!json) {
+        xml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<request>\n</request>\n'
+    }
+    else {
+        xml = easyxml.render(json);
+    }
     xml = xml.replace('<request>', '<request method="' + method + '">');
 
     var options = {

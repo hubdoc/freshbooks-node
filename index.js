@@ -7,7 +7,7 @@ function Freshbooks(account, token, agent, showAttributes) {
     this.token = token;
     this.agent = agent;
     this.parser = new xml2js.Parser({explicitArray: false, ignoreAttrs: showAttributes !== undefined ? (showAttributes ? false : true) : true, async: true});
-    easyxml.configure({rootElement: 'request', manifest: true});
+    this.easyxml_parser = new easyxml({rootElement: 'request', manifest: true});
 }
 
 Freshbooks.prototype.call = function(method, json, callback) {
@@ -18,7 +18,7 @@ Freshbooks.prototype.call = function(method, json, callback) {
         xml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<request>\n</request>\n'
     }
     else {
-        xml = easyxml.render(json);
+        xml = self.easyxml_parser.render(json);
     }
     xml = xml.replace('<request>', '<request method="' + method + '">');
 

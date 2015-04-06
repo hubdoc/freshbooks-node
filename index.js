@@ -18,7 +18,11 @@ Freshbooks.prototype.call = function(method, json, callback) {
         xml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<request>\n</request>\n'
     }
     else {
-        xml = self.easyxml_parser.render(json);
+        try {
+            xml = self.easyxml_parser.render(json);
+        } catch (e) {
+            return callback(e);
+        }
     }
     xml = xml.replace('<request>', '<request method="' + method + '">');
 
@@ -38,14 +42,18 @@ Freshbooks.prototype.call = function(method, json, callback) {
         } else if (res.statusCode !== 200) {
             return callback(new Error(res.statusCode));
         } else {
-            self.parser.parseString(body, function(err, json) {
-                if (err) return callback(err);
-                if (json && json.response && json.response.error) {
-                    return callback(json);
-                } else {
-                    return callback(null, json);
-                }
-            });
+            try {
+                self.parser.parseString(body, function(err, json) {
+                    if (err) return callback(err);
+                    if (json && json.response && json.response.error) {
+                        return callback(json);
+                    } else {
+                        return callback(null, json);
+                    }
+                });
+            } catch (e) {
+                return callback("freshbooks-node api threw an error");
+            }
         }
     });
 }

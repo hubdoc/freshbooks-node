@@ -52,7 +52,7 @@ Freshbooks.prototype.call = function(method, json, callback) {
                     }
                 });
             } catch (e) {
-                return callback("freshbooks-node api threw an error");
+                return callback(e);
             }
         }
     });

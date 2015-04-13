@@ -1,10 +1,11 @@
 {
   "name": "freshbooks-node",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "dependencies": {
     "request": "*",
-	"easyxml": "*",
-	"xml2js": "*"
+	  "easyxml": "*",
+	  "xml2js": "*",
+    "domain": "*"
   },
   "description": "Freshbooks Node Library",
   "main": "index.js",

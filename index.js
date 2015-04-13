@@ -1,6 +1,7 @@
 var request = require('request');
 var easyxml = require('easyxml');
 var xml2js = require('xml2js');
+var domain = require('domain');
 
 function Freshbooks(account, token, agent, showAttributes) {
     this.url = 'https://' + account + '.freshbooks.com/api/2.1/xml-in';
@@ -13,48 +14,62 @@ function Freshbooks(account, token, agent, showAttributes) {
 Freshbooks.prototype.call = function(method, json, callback) {
     var self = this;
     var xml;
+    var d = domain.create();
 
-    if (!json) {
-        xml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<request>\n</request>\n'
-    }
-    else {
-        try {
-            xml = self.easyxml_parser.render(json);
-        } catch (e) {
-            return callback(e);
+    var _callback = callback;
+    var call_callback = function(err, json) {
+        if (callback) {
+            callback = null;
+            return _callback(err, (err ? undefined : json));
         }
-    }
-    xml = xml.replace('<request>', '<request method="' + method + '">');
+    };
+    d.on('error', function(err) {
+        return call_callback(err);
+    });
 
-    var options = {
-        uri: self.url,
-        method: "POST",
-        headers: {
-            'Authorization': 'Basic ' + new Buffer(self.token + ':X').toString('base64'),
-            'User-Agent': self.agent
-        },
-        body: xml
-    }
-
-    request(options, function(err, res, body) {
-        if (err) {
-            return callback(err);
-        } else if (res.statusCode !== 200) {
-            return callback(new Error(res.statusCode));
-        } else {
+    d.run(function() {
+        if (!json) {
+            xml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<request>\n</request>\n'
+        }
+        else {
             try {
-                self.parser.parseString(body, function(err, json) {
-                    if (err) return callback(err);
-                    if (json && json.response && json.response.error) {
-                        return callback(json);
-                    } else {
-                        return callback(null, json);
-                    }
-                });
+                xml = self.easyxml_parser.render(json);
             } catch (e) {
-                return callback(e);
+                return call_callback(e);
             }
         }
+        xml = xml.replace('<request>', '<request method="' + method + '">');
+
+        var options = {
+            uri: self.url,
+            method: "POST",
+            headers: {
+                'Authorization': 'Basic ' + new Buffer(self.token + ':X').toString('base64'),
+                'User-Agent': self.agent
+            },
+            body: xml
+        }
+
+        request(options, function(err, res, body) {
+            if (err) {
+                return call_callback(err);
+            } else if (res.statusCode !== 200) {
+                return call_callback(new Error(res.statusCode));
+            } else {
+                try {
+                    self.parser.parseString(body, function(err, json) {
+                        if (err) return call_callback(err);
+                        if (json && json.response && json.response.error) {
+                            return call_callback(json);
+                        } else {
+                            return call_callback(null, json);
+                        }
+                    });
+                } catch (e) {
+                    return call_callback(e);
+                }
+            }
+        });
     });
 }
 

@@ -1,6 +1,6 @@
 {
-  "name": "freshbooks-node",
-  "version": "0.0.4",
+  "name": "@hubdoc/freshbooks-node",
+  "version": "0.0.1",
   "dependencies": {
     "request": "*",
 	  "easyxml": "*",
